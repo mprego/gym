@@ -70,7 +70,7 @@ def choose_action(obs, p, eps=0):
     p_row = p.loc[(p['me']==obs[0]) & (p['dealer']==obs[1]) & (p['ace']==obs[2])]    
     action = int(p_row['action'].values[0])
     
-    if np.random.randint(0, 1) < eps:
+    if np.random.random() < eps:
         return np.random.randint(0,2)
     else:
         return action  
