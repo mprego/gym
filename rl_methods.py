@@ -41,6 +41,28 @@ def mc_update_policy(obs, q, p):
     return new_p
 
 
+def mc_ois_update_values(obs, action, reward, q, imp_ratio):
+    q_row = q.loc[(q['me']==obs[0]) & (q['dealer']==obs[1]) & (q['ace']==obs[2]) & (q['action']==action)]
+    n = q_row['num_visits'].values[0]
+    old_reward = q_row['reward'].values[0]
+    new_reward = (old_reward*n + reward*imp_ratio)/(n+1)
+    new_q = q#.copy()
+    new_q.loc[(new_q['me']==obs[0]) & (new_q['dealer']==obs[1]) & (new_q['ace']==obs[2]) & (new_q['action']==action),'reward'] = new_reward
+    new_q.loc[(new_q['me']==obs[0]) & (new_q['dealer']==obs[1]) & (new_q['ace']==obs[2]) & (new_q['action']==action), 'num_visits'] = n + 1
+    return new_q
+
+
+def mc_wis_update_values(obs, action, reward, q, imp_ratio):
+    q_row = q.loc[(q['me']==obs[0]) & (q['dealer']==obs[1]) & (q['ace']==obs[2]) & (q['action']==action)]
+    denom = q_row['num_visits'].values[0]
+    old_reward = q_row['reward'].values[0]
+    new_reward = (old_reward*denom + reward*imp_ratio)/(denom + imp_ratio)
+    new_q = q#.copy()
+    new_q.loc[(new_q['me']==obs[0]) & (new_q['dealer']==obs[1]) & (new_q['ace']==obs[2]) & (new_q['action']==action),'reward'] = new_reward
+    new_q.loc[(new_q['me']==obs[0]) & (new_q['dealer']==obs[1]) & (new_q['ace']==obs[2]) & (new_q['action']==action), 'num_visits'] = denom + imp_ratio
+    return new_q
+
+
 def q_update_values(obs, action, reward, q, p, alpha):
     q_row = q.loc[(q['me']==obs[0]) & (q['dealer']==obs[1]) & (q['ace']==obs[2]) & (q['action']==action)]
     old_reward = q_row['reward'].values[0]
@@ -74,4 +96,16 @@ def choose_action(obs, p, eps=0):
         return np.random.randint(0,2)
     else:
         return action  
+    
+    
+def choose_prob_action(obs, p, eps=0):
+    if np.random.random() < eps:
+        return np.random.randint(0,2)
+    
+    p_row = p.loc[(p['me']==obs[0]) & (p['dealer']==obs[1]) & (p['ace']==obs[2])]    
+    action_prob = int(p_row['action'].values[0])
+    if np.random.random() < action_prob:
+        return 1
+    else:
+        return 0    
     
